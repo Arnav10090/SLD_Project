@@ -1,42 +1,31 @@
 # DOL Motor Starter Control Circuit Simulator
 
-A comprehensive, interactive web application that simulates a Direct-On-Line (DOL) motor starter control circuit with real-time visual feedback and animations.
+A modern, interactive web application that simulates a Direct-On-Line (DOL) motor starter control circuit with real-time visual feedback and animations, built with Next.js and shadcn/ui.
 
 ## 🎯 Overview
 
-This simulator provides a realistic representation of a DOL motor starter system, allowing users to interact with START/STOP controls and observe real-time circuit behavior, current flow visualization, and motor operation dynamics.
+This simulator provides a realistic representation of a DOL motor starter system, allowing users to interact with START/STOP controls and observe real-time circuit behavior with a clean, modern interface.
 
 ## ✨ Features
 
 ### Core Functionality
 - **Interactive Control Circuit**: SVG-based electrical schematic with clickable components
 - **Real-time Motor Control**: START/STOP button operations with proper interlocking
-- **Visual Current Flow**: Animated current path visualization through circuit components
-- **Motor Animation**: Realistic 3D motor rotation with RPM display and speed ramping
-- **Safety Systems**: MCB, overload protection, and emergency stop functionality
+- **Visual Feedback**: Clear status indicators and operational states
+- **Responsive Design**: Works seamlessly across desktop and mobile devices
 
-### Advanced Features
-- **State Management**: Comprehensive motor control states (STOPPED, STARTING, RUNNING, STOPPING, FAULT)
-- **System Monitoring**: Real-time status display with component health indicators
-- **Fault Simulation**: Overload trip simulation and fault reset capabilities
-- **Educational Interface**: Component tooltips and operational explanations
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+### Technical Implementation
+- **Modern Stack**: Built with Next.js 13+ and TypeScript
+- **UI Components**: Utilizes shadcn/ui for consistent, accessible components
+- **Styling**: Tailwind CSS for utility-first styling
+- **State Management**: React hooks for efficient state management
+- **Type Safety**: Full TypeScript support throughout the application
 
-### Visual Design
-- **Industrial Theme**: Professional electrical schematic appearance
-- **Modern UI**: Dark theme with accent colors and glass morphism effects
-- **Smooth Animations**: Framer Motion powered transitions and micro-interactions
-- **Status Indicators**: Color-coded system health and operational status
-- **Touch-Friendly**: Mobile-optimized controls with haptic feedback
-
-## 🛠️ Technology Stack
-
-- **Framework**: Next.js 14 with App Router
-- **Styling**: Tailwind CSS with custom animations
-- **Animations**: Framer Motion for smooth, performant animations
-- **State Management**: React Context with useReducer hook
-- **Icons**: Lucide React for consistent iconography
-- **TypeScript**: Full type safety throughout the application
+### User Experience
+- **Intuitive Interface**: Clean, professional design with clear visual hierarchy
+- **Responsive Controls**: Optimized for both mouse and touch interactions
+- **Accessibility**: Built with accessibility in mind using Radix UI primitives
+- **Performance**: Optimized for fast loading and smooth interactions
 
 ## 🚀 Getting Started
 
@@ -49,7 +38,7 @@ This simulator provides a realistic representation of a DOL motor starter system
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd dol-motor-starter-simulator
+   cd SLD_project
    ```
 
 2. Install dependencies:
@@ -74,23 +63,21 @@ npm start
 ## 📁 Project Structure
 
 ```
-src/
+.
 ├── app/                    # Next.js App Router
 │   ├── page.tsx           # Main application page
-│   ├── layout.tsx         # Root layout with fonts
-│   └── globals.css        # Global styles and animations
-├── components/            # React components
-│   ├── ControlCircuit.tsx # Interactive control circuit diagram
-│   ├── PowerCircuit.tsx   # Three-phase power circuit display
-│   ├── ControlPanel.tsx   # START/STOP control interface
-│   ├── StatusDisplay.tsx  # System status and monitoring
-│   ├── MotorAnimation.tsx # 3D motor rotation animation
-│   ├── CurrentFlow.tsx    # Animated current flow indicators
-│   └── MotorStarterSimulator.tsx # Main layout component
+│   ├── layout.tsx         # Root layout with fonts and providers
+│   └── globals.css        # Global styles and Tailwind imports
+├── components/            # Reusable UI components
+│   ├── ui/               # shadcn/ui components
+│   └── (custom components) # Application-specific components
+├── lib/                   # Utility functions and configurations
+│   ├── utils.ts           # Helper functions
+│   └── animations.ts      # Animation configurations
 ├── hooks/                 # Custom React hooks
-│   └── useMotorControl.tsx # Motor control state management
-└── lib/                   # Utility libraries
-    └── animations.ts      # Framer Motion animation presets
+│   └── useMotorControl.tsx # Motor control logic
+├── public/                # Static assets
+└── styles/                # Global styles (if any)
 ```
 
 ## 🎮 Usage Guide
@@ -127,23 +114,6 @@ src/
 - **Component Health**: MCB, overload, and contactor status
 - **Fault Display**: Active fault conditions and descriptions
 
-## 🎨 Customization
-
-### Theme Customization
-- Modify `tailwind.config.ts` for color scheme changes
-- Update CSS custom properties in `globals.css`
-- Adjust component-specific styling in individual components
-
-### Animation Settings
-- Configure animation parameters in `lib/animations.ts`
-- Modify motor rotation speed in `MotorAnimation.tsx`
-- Adjust current flow timing in `CurrentFlow.tsx`
-
-### Circuit Modifications
-- Update SVG paths in `ControlCircuit.tsx` and `PowerCircuit.tsx`
-- Add new components by extending the circuit diagrams
-- Implement additional safety features in the state management
-
 ## 🔧 Technical Details
 
 ### State Management
@@ -154,48 +124,6 @@ The application uses a reducer-based state management system with the following 
 - `STOPPING`: Motor is decelerating
 - `FAULT`: System fault condition active
 
-### Animation System
-- **Framer Motion**: Handles all UI animations and transitions
-- **CSS Animations**: Used for continuous effects like current flow
-- **SVG Animations**: Circuit component state changes and indicators
-- **Performance Optimized**: 60fps animations with hardware acceleration
-
-### Responsive Design
-- **Mobile First**: Optimized for touch interfaces
-- **Breakpoints**: Custom responsive layouts for different screen sizes
-- **Accessibility**: ARIA labels and keyboard navigation support
-- **Performance**: Optimized images and lazy loading
-
-## 📱 Browser Support
-
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/new-feature`)
-3. Commit your changes (`git commit -am 'Add new feature'`)
-4. Push to the branch (`git push origin feature/new-feature`)
-5. Create a Pull Request
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Electrical engineering principles and DOL starter circuit design
-- Industrial automation standards and practices
-- Modern web development best practices
-- Accessibility guidelines and inclusive design principles
-
-## 📞 Support
-
-For questions, issues, or feature requests, please open an issue on the GitHub repository or contact the development team.
-
----
-
-**Note**: This simulator is designed for educational purposes and should not be used as a substitute for proper electrical engineering design and safety protocols in real-world applications.
