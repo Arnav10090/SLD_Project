@@ -100,6 +100,18 @@ export function MotorProvider({ children }: { children: React.ReactNode }) {
 
   // Handle motor RPM changes with smooth acceleration/deceleration
   useEffect(() => {
+    // If emergency stop is active, ensure motor is stopped immediately
+    if (state.motorState === MotorState.EMERGENCY_STOP) {
+      if (state.motorRPM > 0) {
+        // Force immediate stop by directly dispatching an update
+        dispatch({ type: 'SET_RPM', payload: 0 });
+      }
+      // Clear any running intervals
+      if (rpmInterval) clearInterval(rpmInterval);
+      if (runtimeInterval) clearInterval(runtimeInterval);
+      return;
+    }
+    
     if (state.motorState === MotorState.STARTING) {
       // Calculate target RPM based on time since start
       const startTimestamp = state.startTime || Date.now();
@@ -128,7 +140,7 @@ export function MotorProvider({ children }: { children: React.ReactNode }) {
       
       return () => clearInterval(interval);
       
-    } else if (state.motorState === MotorState.STOPPING || state.motorState === MotorState.EMERGENCY_STOP) {
+    } else if (state.motorState === MotorState.STOPPING) {
       // Smooth deceleration when stopping
       const stopTimestamp = Date.now();
       const startRPM = state.motorRPM;
@@ -224,6 +236,20 @@ export function MotorProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Helper function to stop all motor operations immediately
+const getEmergencyStopState = (state: MotorControlState): MotorControlState => ({
+  ...state,
+  motorState: MotorState.EMERGENCY_STOP,
+  motorRPM: 0,
+  isContactorEnergized: false,
+  currentFlow: false,
+  isEmergencyStopActive: true,
+  faultCondition: 'EMERGENCY STOP ACTIVATED',
+  isStartButtonPressed: false,
+  isStopButtonPressed: false,
+  startTime: null
+});
+
 function motorReducer(state: MotorControlState, action: MotorAction): MotorControlState {
   switch (action.type) {
     // User actions
@@ -277,20 +303,16 @@ function motorReducer(state: MotorControlState, action: MotorAction): MotorContr
       };
 
     case 'TRIGGER_EMERGENCY_STOP':
-      return {
-        ...state,
-        motorState: MotorState.EMERGENCY_STOP,
-        isContactorEnergized: false,
-        currentFlow: false,
-        isEmergencyStopActive: true,
-        faultCondition: 'EMERGENCY STOP ACTIVATED',
-      };
+      // Return the emergency stop state immediately
+      return getEmergencyStopState(state);
 
     case 'RESET_EMERGENCY_STOP':
       return {
         ...state,
         isEmergencyStopActive: false,
         faultCondition: null,
+        motorState: MotorState.STOPPED, // Reset to stopped state after emergency
+        motorRPM: 0, // Ensure RPM is 0
       };
 
     case 'TOGGLE_MCB':
