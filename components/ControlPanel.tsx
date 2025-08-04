@@ -18,6 +18,13 @@ import {
   CirclePause,
   Loader2,
   PlayCircle,
+  Activity,
+  Shield,
+  Settings,
+  MonitorSpeaker,
+  Cpu,
+  Battery,
+  Signal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -60,6 +67,8 @@ export default function ControlPanel() {
     resetOverload,
     resetRuntime,
   } = useMotorControl();
+  
+  const [activeButton, setActiveButton] = useState<string | null>(null);
 
   const isRunning = state.motorState === 'RUNNING';
   const isStarting = state.motorState === 'STARTING';
@@ -73,41 +82,25 @@ export default function ControlPanel() {
   const handleStartPress = () => {
     if (isDisabled) return;
     pressStartButton();
+    setActiveButton('start');
   };
 
   const handleStartRelease = () => {
     if (isDisabled) return;
     releaseStartButton();
+    setActiveButton(null);
   };
 
   const handleStopPress = () => {
     if (isEmergency || isOverload) return;
     pressStopButton();
+    setActiveButton('stop');
   };
 
   const handleStopRelease = () => {
     if (isEmergency || isOverload) return;
     releaseStopButton();
-  };
-
-  // Add pulsing animation for active states
-  const [pulse, setPulse] = useState(false);
-
-  useEffect(() => {
-    if (isStarting || isStopping) {
-      setPulse(true);
-      const timer = setTimeout(() => setPulse(false), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isStarting, isStopping]);
-
-  // Get status badge variant based on motor state
-  const getStatusBadgeVariant = () => {
-    if (isEmergency) return 'destructive';
-    if (isOverload) return 'destructive';
-    if (isRunning) return 'default';
-    if (isStarting || isStopping) return 'secondary';
-    return 'outline';
+    setActiveButton(null);
   };
 
   const getStatusText = () => {
@@ -119,360 +112,463 @@ export default function ControlPanel() {
     return 'Stopped';
   };
 
-  const getStatusIcon = () => {
-    if (isEmergency) return <AlertCircle className="h-5 w-5 text-red-500" />;
-    if (isOverload) return <CircleAlert className="h-5 w-5 text-amber-500" />;
-    if (isRunning) return <CircleCheck className="h-5 w-5 text-green-500" />;
-    if (isStarting || isStopping) return (
-      <RotateCcw className="h-5 w-5 text-blue-500 animate-spin" />
-    );
-    return <CirclePause className="h-5 w-5 text-muted-foreground" />;
-  };
-
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Status Bar */}
-        <Card className="bg-card rounded-lg border p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div
-                className={cn(
-                  'h-6 w-6 rounded-full',
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-2 sm:p-3 md:p-4 lg:p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Enhanced Responsive Header */}
+          <header className="mb-3 sm:mb-4 md:mb-5 lg:mb-6 bg-slate-800/30 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-slate-700/50 shadow-lg">
+            <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center flex-1 min-w-0">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex-shrink-0">
+                  <MonitorSpeaker className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
+                </div>
+                <div className="ml-3 min-w-0">
+                  <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white truncate">Motor Control Dashboard</h1>
+                  <p className="text-slate-400 text-xs sm:text-sm truncate">Industrial Control System v2.1</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2 sm:space-x-3 w-full xs:w-auto justify-between xs:justify-normal">
+                <div className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${
                   isRunning
-                    ? 'bg-green-500'
+                    ? 'bg-green-400 animate-pulse shadow-lg shadow-green-400/60'
                     : isStarting || isStopping
-                    ? 'bg-blue-500 animate-pulse'
+                    ? 'bg-blue-400 animate-pulse shadow-lg shadow-blue-400/60'
                     : isEmergency || isOverload
-                    ? 'bg-red-500'
-                    : 'bg-muted-foreground'
-                )}
-              />
-              <div>
-                <h3 className="text-lg font-medium">Motor Status</h3>
-                <p className="text-sm text-muted-foreground">
-                  {getStatusText()}
-                </p>
+                    ? 'bg-red-400 animate-pulse shadow-lg shadow-red-400/60'
+                    : 'bg-slate-500'
+                }`} />
+                <Badge className={cn(
+                  "px-2.5 py-1 text-[10px] xs:text-xs font-medium whitespace-nowrap",
+                  isRunning ? "bg-green-500/20 text-green-400 border-green-500/50" :
+                  isStarting || isStopping ? "bg-blue-500/20 text-blue-400 border-blue-500/50" :
+                  isEmergency || isOverload ? "bg-red-500/20 text-red-400 border-red-500/50" :
+                  "bg-slate-500/20 text-slate-400 border-slate-500/50"
+                )}>
+                  {getStatusText().toUpperCase()}
+                </Badge>
               </div>
             </div>
-            <Badge variant={getStatusBadgeVariant()} className="text-sm">
-              <div className="flex items-center space-x-1.5">
-                {getStatusIcon()}
-                <span>{getStatusText().toUpperCase()}</span>
-              </div>
-            </Badge>
-          </div>
-        </Card>
+          </header>
 
-        {/* Motor Metrics */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-semibold">
-              Motor Metrics
-            </CardTitle>
-            <CardDescription>Real-time operating parameters</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0 grid grid-cols-2 gap-4">
-            {/* Individual Metric Cards */}
-            {/* Example: Speed, Runtime, Current, Temperature */}
-            {[
-              {
-                label: 'Speed',
-                value: state.motorRPM,
-                unit: 'RPM',
-                icon: <Gauge className="h-6 w-6 text-blue-500" />,
-                color: 'blue',
-                maxValue: 1500,
-              },
-              {
-                label: 'Runtime',
-                value: formatTime(state.runningTime),
-                unit: '',
-                icon: <Clock className="h-6 w-6 text-amber-500" />,
-                color: 'amber',
-                maxValue: 60, //seconds
-              },
-              {
-                label: 'Current',
-                value: state.systemCurrent.toFixed(1),
-                unit: 'A',
-                icon: (
-                  <Zap
-                    className={cn(
-                      'h-6 w-6',
-                      state.currentFlow ? 'text-yellow-500' : 'text-muted-foreground'
-                    )}
-                  />
-                ),
-                color: 'yellow',
-                maxValue: 20,
-              },
-              {
-                label: 'Temperature',
-                value: Math.round(state.motorTemperature),
-                unit: '°C',
-                icon: (
-                  <Thermometer
-                    className={cn(
-                      'h-6 w-6',
-                      state.motorTemperature > 70 ? 'text-red-500' : state.motorTemperature > 50 ? 'text-amber-500' : 'text-blue-500'
-                    )}
-                  />
-                ),
-                color: state.motorTemperature > 70 ? 'red' : state.motorTemperature > 50 ? 'amber' : 'blue',
-                maxValue: 100,
-              },
-            ].map((metric, index) => (
-              <div
-                key={index}
-                className="flex flex-col p-4 bg-muted/50 rounded-lg border"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {metric.label}
-                  </span>
-                  {metric.icon}
-                </div>
-                <div className="flex items-baseline">
-                  <span className="text-2xl font-bold">
-                    {metric.value}
-                  </span>
-                  <span className="ml-1 text-sm text-muted-foreground">
-                    {metric.unit}
-                  </span>
-                </div>
-                <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden">
-                  <motion.div
-                    className={`h-full bg-${metric.color}-500 rounded-full`}
-                    initial={{ width: 0 }}
-                    animate={{
-                      width: `${Math.min(
-                        100,
-                        (metric.value / metric.maxValue) * 100
-                      )}%`,
-                    }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                  />
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Control Buttons and System Controls */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-semibold">
-              Motor & System Controls
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Motor Control Buttons */}
-            <div>
-              <div className="space-y-4">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant={isRunning ? 'secondary' : 'default'}
-                      size="lg"
-                      className={cn(
-                        'h-28 w-full text-lg font-semibold transition-all duration-200 relative overflow-hidden',
-                        'bg-gradient-to-br from-green-600 to-green-700 hover:from-green-500 hover:to-green-600',
-                        'dark:from-green-700 dark:to-green-800 dark:hover:from-green-600 dark:hover:to-green-700',
-                        isStarting && 'animate-pulse',
-                        (!isReadyToStart || isStarting || isStopping) &&
-                          'opacity-50 cursor-not-allowed'
-                      )}
-                      onClick={handleStartPress}
-                      disabled={!isReadyToStart || isStarting || isStopping}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity" />
-                      {isStarting ? (
-                        <div className="flex flex-col items-center justify-center">
-                          <Loader2 className="h-8 w-8 animate-spin mb-1.5" />
-                          <span>Starting...</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center">
-                          <PlayCircle className="h-8 w-8 mb-1.5" />
-                          <span>START</span>
-                        </div>
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Start the motor</p>
-                    {!isReadyToStart && (
-                      <p className="text-xs text-amber-500 mt-1">
-                        {isEmergency
-                          ? 'Emergency Stop is active'
-                          : !state.mcbClosed
-                          ? 'MCB is turned off'
-                          : state.overloadTripped
-                          ? 'Motor is in overload state'
-                          : 'Motor is not ready to start'}
-                      </p>
-                    )}
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="lg"
-                      className={cn(
-                        'w-full h-28 text-lg font-bold transition-all',
-                        (isEmergency || isOverload)
-                          ? 'cursor-not-allowed'
-                          : 'hover:scale-[1.02] active:scale-95'
-                      )}
-                      onMouseDown={handleStopPress}
-                      onMouseUp={handleStopRelease}
-                      onMouseLeave={handleStopRelease}
-                      onTouchStart={handleStopPress}
-                      onTouchEnd={handleStopRelease}
-                      disabled={!isRunning && !isStarting && !isStopping}
-                    >
-                      <div className="flex flex-col items-center justify-center">
-                        <Square className="h-8 w-8 mb-1.5" />
-                        <span>STOP</span>
-                      </div>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {(isEmergency || isOverload) ? (
-                      <p>Reset emergency stop or overload first</p>
-                    ) : (
-                      <p>Stop the motor</p>
-                    )}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-
-            {/* System Controls */}
-            <div className="space-y-4">
-              {/* Emergency Stop */}
-              <Card className={cn('border-2', isEmergency ? 'border-red-500' : '')}>
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold flex items-center space-x-2">
-                    <AlertTriangle
-                      className={cn(
-                        'h-5 w-5',
-                        isEmergency ? 'text-red-500 animate-pulse' : 'text-amber-500'
-                      )}
-                    />
-                    <span>Emergency Stop</span>
+          {/* Responsive Main Content Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 lg:gap-6">
+            {/* Left Sidebar - Controls */}
+            <div className="md:col-span-2 lg:col-span-1 space-y-4">
+              
+              {/* System Status - Compact */}
+              <Card className="bg-slate-900/70 backdrop-blur-xl border-slate-700/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold text-white flex items-center">
+                    <Signal className="h-4 w-4 text-emerald-400 mr-2" />
+                    Status
                   </CardTitle>
-                  <CardDescription>
-                    {isEmergency ? 'Emergency stop activated' : 'Press in case of emergency'}
-                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Button
-                    variant={isEmergency ? 'outline' : 'destructive'}
-                    size="lg"
-                    className={cn(
-                      'w-full h-16 text-lg font-bold transition-all',
-                      isEmergency ? 'border-red-500 text-red-500' : 'hover:scale-[1.02] active:scale-95'
-                    )}
-                    onClick={isEmergency ? resetEmergencyStop : triggerEmergencyStop}
-                  >
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">MCB</span>
                     <div className="flex items-center space-x-2">
-                      <AlertTriangle className="h-5 w-5" />
-                      <span>{isEmergency ? 'RESET E-STOP' : 'EMERGENCY STOP'}</span>
+                      <div className={`h-2 w-2 rounded-full ${state.mcbClosed ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                      <span className={`text-xs font-bold ${state.mcbClosed ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {state.mcbClosed ? 'ON' : 'OFF'}
+                      </span>
                     </div>
-                  </Button>
-                  {isEmergency && (
-                    <div className="text-center text-sm text-red-500 font-medium">
-                      Emergency stop active. Press RESET to continue.
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">Protection</span>
+                    <div className="flex items-center space-x-2">
+                      <div className={`h-2 w-2 rounded-full ${state.overloadTripped ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                      <span className={`text-xs font-bold ${state.overloadTripped ? 'text-red-400' : 'text-emerald-400'}`}>
+                        {state.overloadTripped ? 'TRIP' : 'OK'}
+                      </span>
                     </div>
-                  )}
+                  </div>
+                  <div className="pt-2 border-t border-slate-700/50">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center space-x-1">
+                        <Clock className="h-3 w-3 text-blue-400" />
+                        <span className="text-xs text-slate-400">Runtime</span>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-xs text-blue-400 hover:bg-blue-500/10 h-5 px-1"
+                        onClick={() => {
+                          resetRuntime();
+                          if (isEmergency) {
+                            resetEmergencyStop();
+                          }
+                        }}
+                      >
+                        {isEmergency ? 'Reset All' : 'Reset'}
+                      </Button>
+                    </div>
+                    <div className="text-sm font-mono font-bold text-white">
+                      {formatTime(state.runningTime)}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
-              {/* MCB and Overload */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Main Circuit Breaker</span>
-                  <Badge variant={state.mcbClosed ? 'default' : 'destructive'}>
-                    {state.mcbClosed ? 'CLOSED' : 'OPEN'}
-                  </Badge>
-                </div>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full h-12"
-                  onClick={toggleMCB}
-                  disabled={isEmergency || isOverload}
-                >
-                  <Power className="h-4 w-4 mr-2" />
-                  {state.mcbClosed ? 'OPEN MCB' : 'CLOSE MCB'}
-                </Button>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Overload Protection</span>
-                  <Badge variant={state.overloadTripped ? 'destructive' : 'default'}>
-                    {state.overloadTripped ? 'TRIPPED' : 'NORMAL'}
-                  </Badge>
-                </div>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full h-12"
-                  onClick={resetOverload}
-                  disabled={!state.overloadTripped}
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  RESET OVERLOAD
-                </Button>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-muted-foreground"
-                onClick={resetRuntime}
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                Reset Runtime Counter
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              {/* Control Buttons - Compact */}
+              <Card className="bg-slate-900/70 backdrop-blur-xl border-slate-700/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold text-white flex items-center">
+                    <Settings className="h-4 w-4 text-blue-400 mr-2" />
+                    Controls
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Start/Stop Buttons */}
+                  <div className="space-y-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onMouseDown={handleStartPress}
+                          onMouseUp={handleStartRelease}
+                          onMouseLeave={handleStartRelease}
+                          disabled={!isReadyToStart || isStarting || isStopping}
+                          className={cn(
+                            'relative h-12 w-full rounded-lg font-bold text-white transition-all duration-300 overflow-hidden',
+                            'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400',
+                            'focus:outline-none focus:ring-2 focus:ring-emerald-400/50',
+                            'transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-emerald-500/30',
+                            (!isReadyToStart || isStarting || isStopping) && 'opacity-50 cursor-not-allowed hover:scale-100',
+                            isStarting && 'animate-pulse'
+                          )}
+                        >
+                          <div className="h-full flex items-center justify-center space-x-2">
+                            {isStarting ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span className="text-sm">Starting...</span>
+                              </>
+                            ) : (
+                              <>
+                                <PlayCircle className="h-4 w-4" />
+                                <span className="text-sm">START</span>
+                              </>
+                            )}
+                          </div>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p>Start motor operation</p>
+                      </TooltipContent>
+                    </Tooltip>
 
-        {/* Status Messages (Improved Animation) */}
-        <AnimatePresence initial={false} custom={{ y: 20 }}>
-          {(state.faultCondition || isEmergency || isOverload) && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className={cn(
-                'p-4 rounded-lg flex items-start space-x-3',
-                isEmergency
-                  ? 'bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
-                  : isOverload
-                  ? 'bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800'
-                  : 'bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800'
-              )}
-            >
-              <AlertCircle
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onMouseDown={handleStopPress}
+                          onMouseUp={handleStopRelease}
+                          onMouseLeave={handleStopRelease}
+                          disabled={!isRunning && !isStarting && !isStopping}
+                          className={cn(
+                            'relative h-12 w-full rounded-lg font-bold text-white transition-all duration-300 overflow-hidden',
+                            'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400',
+                            'focus:outline-none focus:ring-2 focus:ring-red-400/50',
+                            'transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-red-500/30',
+                            (!isRunning && !isStarting && !isStopping) && 'opacity-50 cursor-not-allowed hover:scale-100',
+                            isStopping && 'animate-pulse'
+                          )}
+                        >
+                          <div className="h-full flex items-center justify-center space-x-2">
+                            {isStopping ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span className="text-sm">Stopping...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Square className="h-4 w-4" />
+                                <span className="text-sm">STOP</span>
+                              </>
+                            )}
+                          </div>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p>Stop motor operation</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+
+                  {/* System Controls */}
+                  <div className="space-y-2 pt-2 border-t border-slate-700/50">
+                    <Button
+                      variant="outline"
+                      className="w-full h-8 border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-slate-500 text-xs"
+                      onClick={toggleMCB}
+                      disabled={isOverload}  // Removed isEmergency from disabled condition
+                    >
+                      <Power className="h-3 w-3 mr-2" />
+                      {state.mcbClosed ? 'OPEN MCB' : 'CLOSE MCB'}
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="w-full h-8 border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:border-slate-500 text-xs"
+                      onClick={resetOverload}
+                      disabled={!state.overloadTripped}
+                    >
+                      <RotateCcw className="h-3 w-3 mr-2" />
+                      RESET OVERLOAD
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Emergency Stop - Compact */}
+              <Card className={cn(
+                'backdrop-blur-xl border-2 transition-all duration-300',
+                isEmergency 
+                  ? 'bg-red-500/20 border-red-500/60 shadow-red-500/20' 
+                  : 'bg-slate-900/70 border-slate-700/50'
+              )}>
+                <CardContent className="p-3">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Shield className="h-4 w-4 text-red-400" />
+                    <span className="font-bold text-white text-sm">Emergency</span>
+                  </div>
+                  <Button
+                    className={cn(
+                      'w-full h-10 font-bold transition-all duration-300 text-xs',
+                      isEmergency 
+                        ? 'bg-red-500/20 border-2 border-red-400 text-red-400 hover:bg-red-500/30' 
+                        : 'bg-red-600 hover:bg-red-500 text-white shadow-lg hover:shadow-red-500/30'
+                    )}
+                    onClick={isEmergency ? resetEmergencyStop : triggerEmergencyStop}
+                  >
+                    <AlertTriangle className="h-3 w-3 mr-2" />
+                    {isEmergency ? 'RESET' : 'E-STOP'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Main Content Area - Metrics */}
+            <div className="md:col-span-3 lg:col-span-4 space-y-6">
+              <Card className="bg-slate-900/70 backdrop-blur-xl border-slate-700/50 shadow-2xl h-full">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
+                        <Activity className="h-5 w-5 text-amber-400" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl text-white">Live Motor Metrics</CardTitle>
+                        <CardDescription className="text-slate-400">
+                          Real-time performance monitoring
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="h-2 w-2 bg-emerald-400 rounded-full animate-pulse" />
+                      <span className="text-xs text-slate-400 font-medium">LIVE</span>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  
+                  {/* Responsive Primary Metrics */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    {/* Speed Metric - Responsive */}
+                    <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl p-4 sm:p-6 border border-blue-500/20 backdrop-blur-sm h-full">
+                      <div className="flex items-center space-x-4 mb-6">
+                        <div className="p-4 rounded-xl bg-blue-500/20 border border-blue-500/30">
+                          <Gauge className="h-8 w-8 text-blue-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-white">Motor Speed</h3>
+                          <p className="text-sm text-slate-400">Current RPM</p>
+                        </div>
+                      </div>
+                      <div className="text-center mb-6">
+                        <div className="text-5xl font-bold text-white mb-2">
+                          {state.motorRPM}
+                        </div>
+                        <div className="text-lg text-slate-400">RPM</div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-xs text-slate-500 mb-2">
+                          <span>0</span>
+                          <span>1500</span>
+                        </div>
+                        <div className="h-4 bg-slate-800/60 rounded-full overflow-hidden">
+                          <motion.div
+                            className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(100, (state.motorRPM / 1500) * 100)}%` }}
+                            transition={{ duration: 0.8 }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Temperature Metric - Responsive */}
+                    <div className={cn(
+                      "rounded-2xl p-4 sm:p-6 border backdrop-blur-sm h-full",
+                      state.motorTemperature > 70 
+                        ? 'bg-gradient-to-br from-red-500/10 to-orange-500/10 border-red-500/20' 
+                        : state.motorTemperature > 50 
+                          ? 'bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border-amber-500/20'
+                          : 'bg-gradient-to-br from-emerald-500/10 to-green-500/10 border-emerald-500/20'
+                    )}>
+                      <div className="flex items-center space-x-4 mb-6">
+                        <div className={cn(
+                          "p-4 rounded-xl border",
+                          state.motorTemperature > 70 
+                            ? 'bg-red-500/20 border-red-500/30' 
+                            : state.motorTemperature > 50 
+                              ? 'bg-amber-500/20 border-amber-500/30'
+                              : 'bg-emerald-500/20 border-emerald-500/30'
+                        )}>
+                          <Thermometer className={cn(
+                            "h-8 w-8",
+                            state.motorTemperature > 70 ? 'text-red-400' : 
+                            state.motorTemperature > 50 ? 'text-amber-400' : 'text-emerald-400'
+                          )} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-white">Temperature</h3>
+                          <p className="text-sm text-slate-400">Motor heat level</p>
+                        </div>
+                      </div>
+                      <div className="text-center mb-6">
+                        <div className="text-5xl font-bold text-white mb-2">
+                          {Math.round(state.motorTemperature)}
+                        </div>
+                        <div className="text-lg text-slate-400">°C</div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-xs text-slate-500 mb-2">
+                          <span>0°C</span>
+                          <span>100°C</span>
+                        </div>
+                        <div className="h-4 bg-slate-800/60 rounded-full overflow-hidden">
+                          <motion.div
+                            className={cn(
+                              "h-full rounded-full",
+                              state.motorTemperature > 70 
+                                ? 'bg-gradient-to-r from-red-500 to-orange-400' 
+                                : state.motorTemperature > 50 
+                                  ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
+                                  : 'bg-gradient-to-r from-emerald-500 to-green-400'
+                            )}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(100, (state.motorTemperature / 100) * 100)}%` }}
+                            transition={{ duration: 0.8 }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Responsive Secondary Metrics */}
+                  <div className="bg-slate-800/40 rounded-xl p-4 sm:p-6 border border-slate-600/50">
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center">
+                      <Cpu className="h-5 w-5 text-purple-400 mr-2" />
+                      Electrical Parameters
+                    </h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      
+                      {/* Current */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Zap className={cn(
+                              "h-5 w-5",
+                              state.currentFlow ? 'text-yellow-400' : 'text-slate-500'
+                            )} />
+                            <span className="text-sm font-medium text-slate-300">System Current</span>
+                          </div>
+                          <div className="text-2xl font-bold text-white">
+                            {state.systemCurrent.toFixed(1)}
+                            <span className="text-sm font-normal text-slate-400 ml-1">A</span>
+                          </div>
+                        </div>
+                        <div className="h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                          <motion.div
+                            className="h-full bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min(100, (state.systemCurrent / 20) * 100)}%` }}
+                            transition={{ duration: 0.8 }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Power Status */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Battery className="h-5 w-5 text-green-400" />
+                            <span className="text-sm font-medium text-slate-300">Power Status</span>
+                          </div>
+                          <div className={cn(
+                            "text-lg font-bold px-3 py-1 rounded-lg",
+                            isRunning ? 'text-green-400 bg-green-500/20' : 'text-slate-400 bg-slate-500/20'
+                          )}>
+                            {isRunning ? 'ACTIVE' : 'STANDBY'}
+                          </div>
+                        </div>
+                        <div className="h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                          <motion.div
+                            className={cn(
+                              "h-full rounded-full",
+                              isRunning ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-slate-600'
+                            )}
+                            initial={{ width: 0 }}
+                            animate={{ width: isRunning ? '100%' : '0%' }}
+                            transition={{ duration: 0.8 }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Alert Messages */}
+          <AnimatePresence>
+            {(state.faultCondition || isEmergency || isOverload) && (
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -50 }}
+                transition={{ duration: 0.4 }}
                 className={cn(
-                  'h-5 w-5 mt-0.5 flex-shrink-0',
-                  isEmergency ? 'text-red-500' : isOverload ? 'text-amber-500' : 'text-blue-500'
+                  'mt-4 p-4 rounded-xl flex items-center space-x-4 backdrop-blur-xl border shadow-2xl',
+                  isEmergency
+                    ? 'bg-red-500/10 border-red-500/40 shadow-red-500/20'
+                    : isOverload
+                    ? 'bg-amber-500/10 border-amber-500/40 shadow-amber-500/20'
+                    : 'bg-blue-500/10 border-blue-500/40 shadow-blue-500/20'
                 )}
-              />
-              <div>
-                <p className="font-medium">
-                  {isEmergency ? 'EMERGENCY STOP ACTIVATED' : isOverload ? 'MOTOR OVERLOAD DETECTED' : 'SYSTEM NOTICE'}
-                </p>
-                <p className="text-sm">{state.faultCondition}</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              >
+                <div className={cn(
+                  'p-2 rounded-lg flex-shrink-0',
+                  isEmergency ? 'bg-red-500/20' : isOverload ? 'bg-amber-500/20' : 'bg-blue-500/20'
+                )}>
+                  <AlertCircle className={cn(
+                    'h-5 w-5',
+                    isEmergency ? 'text-red-400' : isOverload ? 'text-amber-400' : 'text-blue-400'
+                  )} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-white">
+                    {isEmergency ? 'EMERGENCY STOP ACTIVATED' : isOverload ? 'MOTOR OVERLOAD DETECTED' : 'SYSTEM NOTICE'}
+                  </p>
+                  <p className="text-sm text-slate-300">{state.faultCondition}</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </TooltipProvider>
   );
